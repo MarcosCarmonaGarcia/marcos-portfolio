@@ -1,0 +1,59 @@
+---
+---
+
+<section id="inicio" class="hero">
+  <div class="terminal">
+    <p><span class="prompt">></span> whoami</p>
+
+    <h1>
+      <span id="name"></span><span class="cursor"></span>
+    </h1>
+
+    <p><span class="prompt">></span> rol</p>
+    <p id="role"></p>
+
+    <p><span class="prompt">></span> especialidad</p>
+    <p id="skills"></p>
+
+    <p><span class="prompt">></span> estado</p>
+    <p class="status" id="status"></p>
+  </div>
+</section>
+
+<script is:inline>
+  const data = [
+    { id: "name", text: "Marcos Carmona", speed: 55 },
+    { id: "role", text: "Entusiasta de la Ciberseguridad", speed: 45 },
+    { id: "skills", text: "Pentesting · Red Team · Blue Team", speed: 35 },
+    { id: "status", text: "Construyendo sistemas seguros...", speed: 40 },
+  ];
+
+  function typeText(id, text, speed) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    let i = 0;
+
+    function type() {
+      if (i < text.length) {
+        el.textContent += text[i];
+        i++;
+        setTimeout(type, speed + Math.random() * 25); // efecto humano
+      }
+    }
+
+    type();
+  }
+
+  window.addEventListener("load", () => {
+    let delay = 0;
+
+    data.forEach((item) => {
+      setTimeout(() => {
+        typeText(item.id, item.text, item.speed);
+      }, delay);
+
+      delay += item.text.length * 30 + 400;
+    });
+  });
+</script>

@@ -1,0 +1,32 @@
+---
+import { getRepos } from "../lib/github";
+
+const repos = await getRepos("marcoscarmonagarcia");
+---
+
+<section id="proyectos" class="section">
+  <h2>Proyectos</h2>
+
+  <p class="muted">
+    Proyectos reales obtenidos desde GitHub.
+  </p>
+
+  <div class="grid">
+    {repos.slice(0, 6).map((repo) => (
+      <article class="card">
+        <h3>{repo.name}</h3>
+
+        <p>{repo.description || "Sin descripción"}</p>
+
+        <div class="tags">
+          {repo.language && <span>{repo.language}</span>}
+          <span>⭐ {repo.stars}</span>
+        </div>
+
+        <a class="mail-link" href={repo.url} target="_blank">
+          ver en GitHub →
+        </a>
+      </article>
+    ))}
+  </div>
+</section>

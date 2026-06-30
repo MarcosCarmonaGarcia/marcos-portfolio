@@ -1,0 +1,47 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const posts = await getCollection("blog");
+const currentIndex = posts.findIndex((p) => p.id === post.id);
+
+const prev = posts[currentIndex - 1];
+const next = posts[currentIndex + 1];
+---
+
+<Layout>
+  <article class="section">
+    <h1>{post.data.title}</h1>
+    <p class="meta">{post.data.description}</p>
+
+    <hr />
+
+    <Content />
+
+    <div class="post-nav">
+      {prev && (
+        <a href={`/blog/${prev.id}`} class="nav-btn">
+          ← Anterior
+        </a>
+      )}
+
+      {next && (
+        <a href={`/blog/${next.id}`} class="nav-btn">
+          Siguiente →
+        </a>
+      )}
+    </div>
+  </article>
+</Layout>

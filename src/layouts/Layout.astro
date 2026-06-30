@@ -1,23 +1,129 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+import "../styles/global.css";
+import "../styles/global.css";
+import Navbar from "../components/Navbar.astro";
+---
+---
+<meta name="description" content="Portfolio de ciberseguridad - pentesting, OWASP, red team y labs prácticos" />
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+<meta property="og:title" content="Marcos | Cybersecurity Portfolio" />
+<meta property="og:description" content="Pentesting, OWASP, red team y laboratorios prácticos" />
+<meta property="og:type" content="website" />
+<!doctype html>
+<html lang="es">
+  <head>
+    <title>{Astro.props.title}</title>
+<meta name="description" content={Astro.props.description} />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marcos | Cybersecurity</title>
+    <meta name="description" content="Portfolio de ciberseguridad de Marcos" />
+  </head>
+
+  <body>
+    <Navbar />
+    <main>
+      <slot />
+    </main>
+<script is:inline>
+  window.addEventListener("DOMContentLoaded", () => {
+    const sections = document.querySelectorAll(".section");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+  });
+</script>
+<script is:inline>
+  window.addEventListener("scroll", () => {
+    const navbar = document.querySelector(".navbar");
+
+    if (!navbar) return;
+
+    if (window.scrollY > 10) {
+      navbar.classList.add("scrolled");
+    } else {
+      navbar.classList.remove("scrolled");
+    }
+  });
+</script>
+<script is:inline>
+  const sections = document.querySelectorAll("section");
+  const links = document.querySelectorAll(".links a");
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const id = entry.target.id;
+
+        links.forEach((link) => {
+          link.classList.remove("active");
+
+          if (link.getAttribute("href") === "#" + id) {
+            link.classList.add("active");
+          }
+        });
+      });
+    },
+    { threshold: 0.4 }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+</script>
+<script is:inline>
+  document.querySelectorAll(".card").forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      card.style.setProperty("--x", `${x}px`);
+      card.style.setProperty("--y", `${y}px`);
+    });
+  });
+</script>
+<script is:inline>
+  function typeText(id, text, speed = 50) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    let i = 0;
+
+    function type() {
+      if (i < text.length) {
+        el.textContent += text[i];
+        i++;
+        setTimeout(type, speed);
+      }
+    }
+
+    type();
+  }
+
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      typeText("email", "maervca2 [at] icloud [dot] com", 40);
+    }, 500);
+
+    setTimeout(() => {
+      typeText("message", "Abierto a oportunidades en ciberseguridad 🔐", 35);
+    }, 1200);
+
+    setTimeout(() => {
+      typeText("status-contact", "Disponible para contacto seguro.", 40);
+    }, 1800);
+  });
+</script>
+  </body>
+</html>
