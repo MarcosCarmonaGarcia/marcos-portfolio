@@ -1,22 +1,23 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar.astro";
+
+const {
+  title = "Marcos | Cybersecurity",
+  description = "Portfolio de ciberseguridad de Marcos",
+} = Astro.props;
 ---
 
-<meta name="description" content="Portfolio de ciberseguridad - pentesting, OWASP, red team y labs prácticos" />
-
-<meta property="og:title" content="Marcos | Cybersecurity Portfolio" />
-<meta property="og:description" content="Pentesting, OWASP, red team y laboratorios prácticos" />
-<meta property="og:type" content="website" />
 <!doctype html>
 <html lang="es">
   <head>
-    <title>{Astro.props.title}</title>
-<meta name="description" content={Astro.props.description} />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Marcos | Cybersecurity</title>
-    <meta name="description" content="Portfolio de ciberseguridad de Marcos" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <title>{title}</title>
   </head>
 
   <body>
@@ -24,105 +25,106 @@ import Navbar from "../components/Navbar.astro";
     <main>
       <slot />
     </main>
-<script is:inline>
-  window.addEventListener("DOMContentLoaded", () => {
-    const sections = document.querySelectorAll(".section");
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
+    <script is:inline>
+      window.addEventListener("DOMContentLoaded", () => {
+        const sections = document.querySelectorAll(".section");
 
-    sections.forEach((section) => observer.observe(section));
-  });
-</script>
-<script is:inline>
-  window.addEventListener("scroll", () => {
-    const navbar = document.querySelector(".navbar");
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+              }
+            });
+          },
+          { threshold: 0.15 }
+        );
 
-    if (!navbar) return;
+        sections.forEach((section) => observer.observe(section));
+      });
+    </script>
+    <script is:inline>
+      window.addEventListener("scroll", () => {
+        const navbar = document.querySelector(".navbar");
 
-    if (window.scrollY > 10) {
-      navbar.classList.add("scrolled");
-    } else {
-      navbar.classList.remove("scrolled");
-    }
-  });
-</script>
-<script is:inline>
-  const sections = document.querySelectorAll("section");
-  const links = document.querySelectorAll(".links a");
+        if (!navbar) return;
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
+        if (window.scrollY > 10) {
+          navbar.classList.add("scrolled");
+        } else {
+          navbar.classList.remove("scrolled");
+        }
+      });
+    </script>
+    <script is:inline>
+      const sections = document.querySelectorAll("section");
+      const links = document.querySelectorAll(".links a");
 
-        const id = entry.target.id;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
 
-        links.forEach((link) => {
-          link.classList.remove("active");
+            const id = entry.target.id;
 
-          if (link.getAttribute("href") === "#" + id) {
-            link.classList.add("active");
-          }
+            links.forEach((link) => {
+              link.classList.remove("active");
+
+              if (link.getAttribute("href") === "#" + id) {
+                link.classList.add("active");
+              }
+            });
+          });
+        },
+        { threshold: 0.4 }
+      );
+
+      sections.forEach((section) => observer.observe(section));
+    </script>
+    <script is:inline>
+      document.querySelectorAll(".card").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          card.style.setProperty("--x", `${x}px`);
+          card.style.setProperty("--y", `${y}px`);
         });
       });
-    },
-    { threshold: 0.4 }
-  );
+    </script>
+    <script is:inline>
+      function typeText(id, text, speed = 50) {
+        const el = document.getElementById(id);
+        if (!el) return;
 
-  sections.forEach((section) => observer.observe(section));
-</script>
-<script is:inline>
-  document.querySelectorAll(".card").forEach((card) => {
-    card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+        let i = 0;
 
-      card.style.setProperty("--x", `${x}px`);
-      card.style.setProperty("--y", `${y}px`);
-    });
-  });
-</script>
-<script is:inline>
-  function typeText(id, text, speed = 50) {
-    const el = document.getElementById(id);
-    if (!el) return;
+        function type() {
+          if (i < text.length) {
+            el.textContent += text[i];
+            i++;
+            setTimeout(type, speed);
+          }
+        }
 
-    let i = 0;
-
-    function type() {
-      if (i < text.length) {
-        el.textContent += text[i];
-        i++;
-        setTimeout(type, speed);
+        type();
       }
-    }
 
-    type();
-  }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          typeText("email", "maervca2 [at] icloud [dot] com", 40);
+        }, 500);
 
-  window.addEventListener("load", () => {
-    setTimeout(() => {
-      typeText("email", "maervca2 [at] icloud [dot] com", 40);
-    }, 500);
+        setTimeout(() => {
+          typeText("message", "Abierto a oportunidades en ciberseguridad 🔐", 35);
+        }, 1200);
 
-    setTimeout(() => {
-      typeText("message", "Abierto a oportunidades en ciberseguridad 🔐", 35);
-    }, 1200);
-
-    setTimeout(() => {
-      typeText("status-contact", "Disponible para contacto seguro.", 40);
-    }, 1800);
-  });
-</script>
+        setTimeout(() => {
+          typeText("status-contact", "Disponible para contacto seguro.", 40);
+        }, 1800);
+      });
+    </script>
   </body>
 </html>
