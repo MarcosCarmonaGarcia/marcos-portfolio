@@ -28,7 +28,7 @@ const posts = (await getCollection("blog")).sort(
             <span>{new Date(post.data.date).toLocaleDateString()}</span>
           </div>
 
-          <a class="mail-link" href={`/blog/${post.id}`}>
+          <a class="mail-link" href={`${import.meta.env.BASE_URL}blog/${post.id}`}>
             leer post →
           </a>
         </article>
