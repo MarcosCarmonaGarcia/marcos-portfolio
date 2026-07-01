@@ -12,6 +12,7 @@ const giscusCategory = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Comentarios";
 const giscusCategoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "DIC_kwDOTJ8h884DATbk";
 const giscusTheme = import.meta.env.PUBLIC_GISCUS_THEME ?? "dark";
 const giscusLang = import.meta.env.PUBLIC_GISCUS_LANG ?? "es";
+const discussionTerm = `blog/${slug}`;
 ---
 
 <div class="comments-section">
@@ -22,7 +23,7 @@ const giscusLang = import.meta.env.PUBLIC_GISCUS_LANG ?? "es";
     data-category={giscusCategory}
     data-category-id={giscusCategoryId}
     data-mapping="specific"
-    data-term={slug}
+    data-term={discussionTerm}
     data-title={title}
     data-strict="0"
     data-reactions-enabled="1"
