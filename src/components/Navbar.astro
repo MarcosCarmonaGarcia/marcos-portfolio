@@ -5,7 +5,13 @@ const base = import.meta.env.BASE_URL;
 <nav class="navbar">
   <div class="logo">Marcos</div>
 
-  <div class="links">
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav-links" aria-label="Abrir menú">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <div class="links" id="main-nav-links">
     <a href={base}>Inicio</a>
     <a href={`${base}#sobre-mi`}>Sobre mí</a>
     <a href={`${base}#proyectos`}>Proyectos</a>
@@ -14,3 +20,31 @@ const base = import.meta.env.BASE_URL;
     <a href={`${base}#contacto`}>Contacto</a>
   </div>
 </nav>
+
+<script is:inline>
+  window.addEventListener("DOMContentLoaded", () => {
+    const navbar = document.querySelector(".navbar");
+    const toggle = navbar?.querySelector(".menu-toggle");
+    const links = navbar?.querySelectorAll(".links a") ?? [];
+
+    if (!navbar || !toggle) return;
+
+    const closeMenu = () => {
+      navbar.classList.remove("menu-open");
+      toggle.setAttribute("aria-expanded", "false");
+    };
+
+    toggle.addEventListener("click", () => {
+      const isOpen = navbar.classList.toggle("menu-open");
+      toggle.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    links.forEach((link) => {
+      link.addEventListener("click", closeMenu);
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 768) closeMenu();
+    });
+  });
+</script>
