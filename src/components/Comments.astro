@@ -8,11 +8,10 @@ const { title, slug } = Astro.props;
 
 const giscusRepo = import.meta.env.PUBLIC_GISCUS_REPO ?? "MarcosCarmonaGarcia/marcos-portfolio";
 const giscusRepoId = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "R_kgDOTJ8h8w";
-const giscusCategory = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Comentarios";
+const giscusCategory = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Announcements";
 const giscusCategoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "DIC_kwDOTJ8h884DATbk";
 const giscusTheme = import.meta.env.PUBLIC_GISCUS_THEME ?? "dark";
 const giscusLang = import.meta.env.PUBLIC_GISCUS_LANG ?? "es";
-const discussionTerm = `blog/${slug}`;
 ---
 
 <div class="comments-section">
@@ -22,9 +21,7 @@ const discussionTerm = `blog/${slug}`;
     data-repo-id={giscusRepoId}
     data-category={giscusCategory}
     data-category-id={giscusCategoryId}
-    data-mapping="specific"
-    data-term={discussionTerm}
-    data-title={title}
+    data-mapping="pathname"
     data-strict="0"
     data-reactions-enabled="1"
     data-emit-metadata="0"
