@@ -488,7 +488,6 @@ body {
   color: var(--accent);
   font-size: 1.1rem;
 }
-}
 
 /* Estilos para posts */
 article p {
@@ -511,5 +510,4 @@ article ol {
 
 article li {
   margin-bottom: 0.5rem;
-}
 }
