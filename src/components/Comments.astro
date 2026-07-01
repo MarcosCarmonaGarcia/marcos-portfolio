@@ -1,0 +1,36 @@
+---
+interface Props {
+  title: string;
+  slug: string;
+}
+
+const { title, slug } = Astro.props;
+---
+
+<div class="comments-section">
+  <script
+    src="https://giscus.app/client.js"
+    data-repo="MarcosCarmonaGarcia/marcos-portfolio"
+    data-repo-id="R_kgDOLe7jcw"
+    data-category="Comentarios"
+    data-category-id="DIC_kwDOLe7jc84Cepfd"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="dark"
+    data-lang="es"
+    data-loading="lazy"
+    crossorigin="anonymous"
+    async
+  ></script>
+</div>
+
+<style>
+  .comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #1f2937;
+  }
+</style>

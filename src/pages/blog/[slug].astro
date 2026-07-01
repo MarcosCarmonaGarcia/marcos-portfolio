@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection, render } from "astro:content";
+import Comments from "../../components/Comments.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -29,6 +30,8 @@ const next = posts[currentIndex + 1];
     <hr />
 
     <Content />
+
+    <Comments title={post.data.title} slug={post.id} />
 
     <div class="post-nav">
       {prev && (
