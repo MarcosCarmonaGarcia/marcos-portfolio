@@ -5,22 +5,29 @@ interface Props {
 }
 
 const { title, slug } = Astro.props;
+
+const giscusRepo = import.meta.env.PUBLIC_GISCUS_REPO ?? "MarcosCarmonaGarcia/marcos-portfolio";
+const giscusRepoId = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "R_kgDOTJ8h8w";
+const giscusCategory = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Comentarios";
+const giscusCategoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "DIC_kwDOTJ8h884DATbk";
+const giscusTheme = import.meta.env.PUBLIC_GISCUS_THEME ?? "dark";
+const giscusLang = import.meta.env.PUBLIC_GISCUS_LANG ?? "es";
 ---
 
 <div class="comments-section">
   <script
     src="https://giscus.app/client.js"
-    data-repo="MarcosCarmonaGarcia/marcos-portfolio"
-    data-repo-id="R_kgDOLe7jcw"
-    data-category="Comentarios"
-    data-category-id="DIC_kwDOLe7jc84Cepfd"
+    data-repo={giscusRepo}
+    data-repo-id={giscusRepoId}
+    data-category={giscusCategory}
+    data-category-id={giscusCategoryId}
     data-mapping="pathname"
-    data-strict="0"
+    data-strict="1"
     data-reactions-enabled="1"
     data-emit-metadata="0"
     data-input-position="bottom"
-    data-theme="dark"
-    data-lang="es"
+    data-theme={giscusTheme}
+    data-lang={giscusLang}
     data-loading="lazy"
     crossorigin="anonymous"
     async
