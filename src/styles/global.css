@@ -459,3 +459,57 @@ body {
   border-color: #00ff99;
   color: #00ff99;
 }
+
+/* Estilos para archivo de posts */
+.archive-list {
+  list-style: none;
+  padding: 0;
+}
+
+.archive-list li {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #1f2937;
+}
+
+.archive-list li:last-child {
+  border-bottom: none;
+}
+
+.archive-list .date {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.archive-list a {
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+}
+
+/* Estilos para posts */
+article p {
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+article h2,
+article h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+article ul,
+article ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+
+article li {
+  margin-bottom: 0.5rem;
+}
+}
