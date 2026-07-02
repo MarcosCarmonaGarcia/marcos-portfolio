@@ -1,26 +1,67 @@
 ---
-title: "Servidor Ftp para practicae"
-description: "Bienvenida a mi blog de hacking"
+title: "Servidor Ftp para practicas con chatGPT"
+description: "Fuerza bruta a protocolo FTP"
 date: "2026-07-02"
 ---
 
-# ¡Bienvenido a mi blog!
-
-Este es mi primer post en el blog. Aquí comparto mis experiencias y conocimientos sobre desarrollo web.
+Este es mi primer post en el blog. Vamos por algo facilito.
 
 ## ¿Qué encontrarás aquí?
 
-- Tutoriales y guías de programación
-- Artículos sobre tecnologías web
-- Proyectos interesantes
+- Instalaremos un servidor FTP y lo configuraremos
+- Aprenderemos el uso de Hydra
+- Veremos lo vulnerable que es una contraseña fácil
 - Tips y buenas prácticas
 
 ## Tecnologías que uso
 
 Trabajo principalmente con:
-- **Astro** - Framework moderno para sitios estáticos
-- **React** - Componentes interactivos
-- **TypeScript** - Tipado seguro
-- **Tailwind CSS** - Estilos modernos
+- **Nmap** - Escaner de puertos y vulnerabilidades
+- **Hydra** - Bruteforce interactivo
+- **Vmware** - Virtualización
+
+## Instalación y configuración del servidor en Ubuntu
+
+Tengo Ubuntu virtualizado con Vmware, por lo que procedo a instalar el servidor que atacaremos, en este caso será vsftpd 3.0.5.
+Lo primero es hacer un `sudo apt install vsftpd`.
+
+[![Instalacion del servidor FTP](/instalacion-ftp.png)](/instalacion-ftp.png)
+
+
+
+Ahora iniciamos el servidor y el servicio FTP: 
+
+`sudo systemctl vsftpd start`
+
+[![Levantar servidor FTP](/Levantar_servicio_ftp.png)](/Levantar_servicio_ftp.png)
+
+Y ya tenemos FTP en la máquina pero de todas maneras, lo comprobaremos con Nmap.
+
+`sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 192.168.1.35 -oN ftp.txt`
+
+[![Escaneo con Nmap](/Nmap_ftp.png)](/Nmap_ftp.png)
+
+Vemos que ya tenemos el ftp corriendo por el puerto 21. Ahora de lo que se trata es de conseguir conectarnos, como se supone que solo sabemos el usuario de la máquina, usaremos Hydra para sacar la pass.
+
+`hydra -l marcos -P /usr/share/wordlists/rockyou.txt ftp://192.168.1.35 `
+
+Paso a explicar cada parámetro:
+- -l: se pone cuando sabemos el parámetro
+- -P: se pone cuando tenemos que pasar un diccionario de contraseñas por que no la sabemos
+- El resto es la ruta del diccionario y la ip objetivo antecedido por el protocolo a atacar.
+
+[![Fuerza bruta con Hydra](/Hydra_ftp.png)](/Hydra_ftp.png)
+
+Y ahí tenemos la contraseña.
+
+Cabe destacar que pa password debe estar en el diccionario, si no lo está, siempre puedes generarte uno personalizado.
+
+
+
+
+
+
+
+
 
 ¡Espero que disfrutes el contenido!

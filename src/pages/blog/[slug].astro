@@ -23,7 +23,7 @@ const next = posts[currentIndex + 1];
 ---
 
 <Layout>
-  <article class="section">
+  <article class="section post-article">
     <h1>{post.data.title}</h1>
     <p class="meta">{post.data.description}</p>
 
@@ -47,4 +47,81 @@ const next = posts[currentIndex + 1];
       )}
     </div>
   </article>
+
+  <div class="image-lightbox" id="imageLightbox" hidden aria-hidden="true">
+    <button type="button" class="lightbox-close" aria-label="Cerrar imagen ampliada">
+      ×
+    </button>
+    <img id="lightboxImage" alt="Imagen ampliada" />
+  </div>
+
+  <script is:inline>
+    window.addEventListener("DOMContentLoaded", () => {
+      const blocks = document.querySelectorAll(".post-article pre");
+
+      blocks.forEach((block) => {
+        const code = block.querySelector("code");
+        const preClasses = block.className || "";
+        const codeClasses = code?.className || "";
+
+        let lang =
+          block.getAttribute("data-language") ||
+          block.getAttribute("data-lang") ||
+          "";
+
+        if (!lang) {
+          const source = `${preClasses} ${codeClasses}`;
+          const match = source.match(/language-([a-zA-Z0-9_+-]+)/);
+          lang = match?.[1] || "text";
+        }
+
+        block.setAttribute("data-code-lang", lang.toUpperCase());
+      });
+
+      const imageLinks = Array.from(document.querySelectorAll(".post-article a")).filter(
+        (link) => link.querySelector("img")
+      );
+
+      const lightbox = document.getElementById("imageLightbox");
+      const lightboxImage = document.getElementById("lightboxImage");
+      const closeButton = lightbox?.querySelector(".lightbox-close");
+
+      const closeLightbox = () => {
+        if (!lightbox || !lightboxImage) return;
+        lightbox.hidden = true;
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImage.removeAttribute("src");
+        document.body.classList.remove("lightbox-open");
+      };
+
+      imageLinks.forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (!lightbox || !lightboxImage) return;
+
+          const preview = link.querySelector("img");
+          const src = link.getAttribute("href") || preview?.getAttribute("src");
+          if (!src) return;
+
+          lightboxImage.setAttribute("src", src);
+          lightboxImage.setAttribute("alt", preview?.getAttribute("alt") || "Imagen ampliada");
+          lightbox.hidden = false;
+          lightbox.setAttribute("aria-hidden", "false");
+          document.body.classList.add("lightbox-open");
+        });
+      });
+
+      closeButton?.addEventListener("click", closeLightbox);
+
+      lightbox?.addEventListener("click", (event) => {
+        if (event.target === lightbox) closeLightbox();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && lightbox && !lightbox.hidden) {
+          closeLightbox();
+        }
+      });
+    });
+  </script>
 </Layout>
