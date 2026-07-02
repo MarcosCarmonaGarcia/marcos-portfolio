@@ -118,8 +118,12 @@ a:hover {
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   color: var(--accent);
   font-weight: bold;
+  font-size: 0.95rem;
 }
 
 .links {
@@ -149,7 +153,6 @@ a:hover {
   }
 
   .logo {
-    font-size: 0.95rem;
     min-width: max-content;
   }
 
