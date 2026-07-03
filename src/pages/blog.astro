@@ -24,6 +24,14 @@ const posts = (await getCollection("blog")).sort(
           <h3>{post.data.title}</h3>
           <p>{post.data.description}</p>
 
+          {post.data.tags && post.data.tags.length > 0 && (
+            <div class="tags">
+              {post.data.tags.map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+          )}
+
           <div class="meta">
             <span>{new Date(post.data.date).toLocaleDateString()}</span>
           </div>
