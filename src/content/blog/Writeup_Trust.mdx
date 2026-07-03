@@ -1,0 +1,100 @@
+---
+title: "Writeup Trust"
+description: "Writeup de la máquina Trust de Dockerlabs"
+date: "2026-07-03"
+tags: ["dockerlabs", "ssh", "hacking", "fuzzing"]
+---
+
+## ¿Qué encontrarás aquí?
+
+- Aprennderemos a desplegar un laboratorio de [Dockerlabs](https://dockerlabs.es)
+- Realizaremos fuzzing
+- Usaremos fuerza bruta para descubrir contraseñas
+
+## Tecnologías
+
+- Hydra
+- Nmap
+- Gobuster
+
+## Comenzamos 
+
+Lo primero es bajarse la máquina de la plataforma de [aquí](https://mega.nz/file/CUtQjK5S#Le7ZLVQKzsVKG05rvulpLdyG4sR-4Iihs9BLHrwFHIU).
+
+Una vez descargado descomprimimos el archivo con la herramienta `unzip` con el siguiente comando:
+`unzip trust.zip`
+
+Veremos los siguientes archivos:
+
+- Auto_deploy.sh
+- trust.tar
+- trust.zip
+
+Toca desplegar el laboratorio con el comando `sudo bash auto_deploy.sh trust.tar`, y veremos la ip de la máquina.
+
+[![Despliegue del laboratorio](/Despliegue_dockerlabs.png)](/Despliegue_dockerlabs.png)
+
+## Escaneo de puertos
+
+Para ver por donde atacar, tenemos que hacer un escaneo a ver que puertos encontramos abiertos, y como siempre, usaremos para ello nmap:
+
+`sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 172.17.0.2 -oN trust.txt `
+
+Vemos que tiene el puerto 80 y el 22 abiertos.
+
+[![Nmap_trust](/Nmap_trust.png)](/Nmap_trust.png)
+
+Visitamos con nuestro navegador el puerto 80  y vemos que solo hay una web con laboratorios, pero navegando por las diferentes partes no he visto nada relevante.
+
+[![Web_trust](/Web_trust.png)](/Web_trust.png)
+
+## Decubrimiento de direcotorios y archivos
+
+El siguiente paso lógico es hacer fuzzing web para ver si encontramos algún subdirectorio o archivo, para ello usaremos Gobuster.
+
+`gobuster dir -u 172.17.0.2 -w /usr/share/wordlists/dirb/common.txt  -x php --exclude-length 10701`
+
+Y vemos que nos detecta un archivo llamado `secret.php`, así que vamos a vistarlo desde el navegador.
+
+[![secret_trust](/secret_trust.png)](/secret_trust.png)
+
+Vemos que nos muestra un usuario: mario.
+
+[![mario_trust](/mario_trust.png)](/mario_trust.png)
+
+## Fuerza bruta al puerto 22
+
+Una vez sabemos el usuario, vamos intentar sacar la pass con `Hydra`.
+
+`hydra -l mario -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 ` 
+
+Y vemos que nos encuentra el password sin problemas.
+
+[![chocolate_trust](/chocolate_trust.png)](/chocolate_trust.png)
+
+## Conectándonos por SSH
+
+Nos conectamos con las credenciales obtenidas y vemos que son válidas:
+
+`ssh mario@172.17.0.2 ` 
+
+[![ssh_trust](/ssh_trust.png)](/ssh_trust.png)
+
+## Escalando privilegios
+
+La escalada es facilita, tan solo hay que hacer un `sudo -l` y vemos que el binario accesible es `vim`, así que hacemos la escalada mediante él:
+
+`sudo vim -C ':!/bin/sh'`
+
+Y ya somos `root`.
+
+
+
+
+
+
+
+
+
+
+
