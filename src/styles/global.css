@@ -627,6 +627,8 @@ article li {
 /* Lectura y código profesional para posts */
 .post-article {
   width: min(820px, 100%);
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 .post-article p,
