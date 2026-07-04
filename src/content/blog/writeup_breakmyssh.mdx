@@ -1,0 +1,71 @@
+---
+title: "Writeup Breakmyssh"
+description: "Writeup de la máquina Breakmyssh de Dockerlabs"
+date: "2026-07-03"
+tags: ["dockerlabs", "ssh", "hacking", "hydra", "seclist", "metasploit"]
+---
+
+## ¿Qué encontrarás aquí?
+
+- Desplegaremos el laboratorio de [Dockerlabs](https://dockerlabs.es)
+- Usaremos un exploit de [Metasploit](https://www.metasploit.com) para enumerar usuarios
+- Fuerza bruta a contraseña SSH
+
+## Tecnologías
+
+- Nmap
+- Hydra
+- Metasploit
+
+## Despliegue del laboratorio
+
+El despliegue con Docker es muy fácil, solo tenemos que bajar el laboratorio de [aquí](https://mega.nz/file/hfE3lbwZ#ExAcF54AyOHeJqgH2R4cDIAGc5IVlJnI5Rs-Us2QMpM).
+Una vez bajado lo descomprimimos con el siguiente comando `unzip breakmyssh.zip` y veremos varios archivos, entre ellos un `.tar`.
+Ahora solo tenemos que invocar a bash y desplegar el laboratorio ` sudo bash auto_deploy.sh breakmyssh.tar` y en unos segundos veremos la ip.
+
+[![Despliegue_breakmyssh](/Despliegue_breakmyssh.png)](/Despliegue_breakmyssh.png)
+
+## Comprobando conectividad y escaneo de puertos
+
+El primer paso lógico es hacer una prueba de conectividad con el laboratorio con un `ping -c 1 172.17.0.2` y vemos que nos responde y que es una máquina Linux por el ttl = 64.
+
+[![Ping_breakmyssh](/Ping_breakmyssh.png)](/Ping_breakmyssh.png)
+
+Ahora vamos a escanear con Nmap para ver qué puertos tiene abiertos la máquina.
+
+`sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 172.17.0.2 -oN break.txt` 
+
+Y vemos que al ser una máquina fácil, solo tiene el puerto 22 abierto.
+
+## Rompiendo las credenciales
+
+En esta máquina no se puede saber el usuario por lo que para hacer fuerza bruta usaré el wordlist de [Seclist](https://github.com/danielmiessler/SecLists.git) para enumerarlos.
+
+[![Nmap_breakmyssh](/Nmap_breakmyssh.png)](/Nmap_breakmyssh.png)
+
+La primera manera de hacer fuerza bruta es con Hydra, así que vamos a ello. El comando es fácil `hydra -L /usr/share/seclists/Usernames/top-usernames-shortlist.txt -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 `.
+
+Vemos como nos saca el usuario y el password muy rápido.
+
+[![Hydra_breakmyssh](/Hydra_breakmyssh.png)](/Hydra_breakmyssh.png)
+
+Ahora solo queda logeranos como `root` con el password `chocolate` y ya estaría resuelta la máquina.
+
+Pero hay otra manera de hacer esto y es con [Metasploit](https://www.metasploit.com), como vemos en el escaneo de nmap, el servidor SSH que está corriendo es Openssh 7.7, así que buscamos en internet algún exploit y encontramos que hay una vulnerabilidad que permite enumerar usuarios, en concreto esta `⁠CVE-2018-15473`.
+
+Así que abrimos nuestro `msfconsole`  y usamos un `search ⁠CVE-2018-15473` y vemos que existe un exploit.
+
+[![Exploit_breakmyssh](/Exploit_breakmyssh.png)](/Exploit_breakmyssh.png)
+
+Lo seleccionamos `use 0` y con `show options`. vemos que parámetros tenemos que ponerle, en este caso el RHOST y el diccionario de usuarios, el flujo sería este:
+
+`show options` 
+`set RHOST ip_objetivo` 
+`set USER_FILE diccionario_de_usuarios`
+`run`
+
+Y vemos como nos encuentra el usuario.
+
+[![Enumeracion_breakmyssh](/Enumeracion_breakmyssh.png)](/Enumeracion_breakmyssh.png)
+
+
