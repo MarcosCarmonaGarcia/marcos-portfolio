@@ -18,6 +18,12 @@ const postUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toSt
 const shareText = `${post.data.title} — ${post.data.description}`;
 const encodedPostUrl = encodeURIComponent(postUrl);
 const encodedShareText = encodeURIComponent(shareText);
+const socialImages = {
+  "mi-primer-post": "/Nmap_ftp.png",
+  writeup_breakmyssh: "/Nmap_breakmyssh.png",
+  Writeup_Trust: "/Nmap_trust.png",
+};
+const socialImage = socialImages[post.id as keyof typeof socialImages] ?? "/favicon.png";
 
 const posts = await getCollection("blog");
 const currentIndex = posts.findIndex((p) => p.id === post.id);
@@ -26,7 +32,7 @@ const prev = posts[currentIndex - 1];
 const next = posts[currentIndex + 1];
 ---
 
-<Layout>
+<Layout title={post.data.title} description={post.data.description} image={socialImage}>
   <article class="section post-article">
     <h1>{post.data.title}</h1>
     <p class="meta">{post.data.description}</p>
