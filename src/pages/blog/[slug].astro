@@ -14,6 +14,10 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const postUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
+const shareText = `${post.data.title} — ${post.data.description}`;
+const encodedPostUrl = encodeURIComponent(postUrl);
+const encodedShareText = encodeURIComponent(shareText);
 
 const posts = await getCollection("blog");
 const currentIndex = posts.findIndex((p) => p.id === post.id);
@@ -38,6 +42,53 @@ const next = posts[currentIndex + 1];
     <hr />
 
     <Content />
+
+    <section class="share-section" aria-labelledby="share-post">
+      <h2 id="share-post">Compartir en redes</h2>
+      <p>Si te resultó útil, compártelo para que más gente lo vea.</p>
+
+      <div class="share-actions">
+        <a
+          class="share-btn"
+          href={`https://twitter.com/intent/tweet?url=${encodedPostUrl}&text=${encodedShareText}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          X / Twitter
+        </a>
+
+        <a
+          class="share-btn"
+          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedPostUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          LinkedIn
+        </a>
+
+        <a
+          class="share-btn"
+          href={`https://api.whatsapp.com/send?text=${encodedShareText}%20${encodedPostUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp
+        </a>
+
+        <a
+          class="share-btn"
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodedPostUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Facebook
+        </a>
+
+        <button type="button" class="share-btn share-copy" data-copy-link data-copy-url={postUrl}>
+          Copiar enlace
+        </button>
+      </div>
+    </section>
 
     <Comments title={post.data.title} slug={post.id} />
 
@@ -129,6 +180,23 @@ const next = posts[currentIndex + 1];
         if (event.key === "Escape" && lightbox && !lightbox.hidden) {
           closeLightbox();
         }
+      });
+
+      const copyButton = document.querySelector("[data-copy-link]");
+
+      copyButton?.addEventListener("click", async () => {
+        const url = copyButton.getAttribute("data-copy-url") || window.location.href;
+
+        try {
+          await navigator.clipboard.writeText(url);
+          copyButton.textContent = "Enlace copiado";
+        } catch {
+          copyButton.textContent = "No se pudo copiar";
+        }
+
+        window.setTimeout(() => {
+          copyButton.textContent = "Copiar enlace";
+        }, 1800);
       });
     });
   </script>
