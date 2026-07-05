@@ -121,9 +121,17 @@ a:hover {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--accent);
-  font-weight: bold;
-  font-size: 0.95rem;
+  line-height: 0;
+  padding: 0.2rem 0.45rem;
+  border-radius: 10px;
+  background: rgba(5, 10, 18, 0.6);
+}
+
+.logo img {
+  display: block;
+  height: 46px;
+  width: auto;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
 }
 
 .links {
@@ -154,6 +162,10 @@ a:hover {
 
   .logo {
     min-width: max-content;
+  }
+
+  .logo img {
+    height: 38px;
   }
 
   .links {
@@ -846,4 +858,119 @@ body.lightbox-open {
 
 .lightbox-close:hover {
   background: rgba(43, 188, 138, 0.2);
+}
+
+/* Navbar adaptado para logo grande */
+:root {
+  --nav-height-desktop: 96px;
+  --nav-height-mobile: 84px;
+}
+
+.navbar {
+  min-height: var(--nav-height-desktop);
+  padding: 1rem 1.5rem;
+}
+
+.logo {
+  padding: 0.25rem 0.6rem;
+}
+
+.logo img {
+  height: 58px;
+}
+
+body {
+  padding-top: var(--nav-height-desktop);
+}
+
+main {
+  padding-top: calc(var(--nav-height-desktop) - 12px);
+}
+
+section {
+  scroll-margin-top: calc(var(--nav-height-desktop) + 8px);
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    min-height: var(--nav-height-mobile);
+    padding: 0.7rem 1rem;
+  }
+
+  .logo img {
+    height: 46px;
+  }
+
+  body {
+    padding-top: var(--nav-height-mobile);
+  }
+
+  main {
+    padding-top: var(--nav-height-mobile);
+  }
+
+  section {
+    scroll-margin-top: calc(var(--nav-height-mobile) + 16px);
+  }
+}
+
+/* Logo en texto (sin imagen) */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-shadow: 0 0 8px rgba(43, 188, 138, 0.28);
+  animation: logo-terminal-float 2.8s ease-in-out infinite;
+}
+
+.logo::before {
+  content: ">";
+  margin-right: 0.38rem;
+  color: #7af0c0;
+}
+
+.logo::after {
+  content: "_";
+  margin-left: 0.22rem;
+  animation: logo-cursor-blink 1s steps(1, end) infinite;
+}
+
+.logo img {
+  display: none;
+}
+
+@keyframes logo-terminal-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes logo-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo {
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+  }
 }
