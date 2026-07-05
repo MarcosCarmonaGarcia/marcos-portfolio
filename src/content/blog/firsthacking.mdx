@@ -1,0 +1,44 @@
+---
+title: "Writeup Firsthacking"
+description: "Writeup de la máquina Firsthacking de Dockerlabs"
+date: "2026-07-05"
+tags: ["dockerlabs", "hacking", "searchsploit"]
+---
+
+## ¿Qué encontrarás aquí?
+
+- Deplegaremos el laboratorio de Dockerlabs
+- Escaneo con Nmap
+- Uso de searchsploit y exploits de terceros
+
+# Tecnologías
+
+- Nmap
+- searchsploit
+- Python
+
+## Despliegue del laboratorio
+
+Descargamos nuestro laboratorio de [aquí](https://mega.nz/file/oCd2VC5D#QfiRoFmZrZ-FjTuyRX9bLw7638fjluwp6jNth7JjXTw).
+Una vez hecho, lo descomprimimos con `unzip firsthacking.zip`.
+Con los archivos resultantes lo iniciamos `sudo bash auto_deploy firsthacking.tar`.
+Veremos la ip de la máquina.
+
+[![Ip_firsthacking](/Ip_firsthacking.png)](/Ip_firsthacking.png)
+ 
+ ## Escaneo de puertos
+
+ Escanemos la máquina en busca de puertos abiertos:
+ `sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 172.17.0.2 -oN first.txt `. Vemos que tenemos el puerto 21 abierto (ftp) y una versión de servidor (vsftpd 2.3.4), así que buscamos un exploit.
+
+ ## searchsploit
+
+ Para ello usaremos la herramienta `searchsploit vsftpd 2.3.4`.
+
+ [![Searchsplit](/Searchsploit_firsthacking.png)](/Searchsploit_firsthacking.png)
+
+Como vemos hay dos resultados, así que tenemos que escoger uno, en este caso el `.py`, lo copiamos a nuestra máquina con `searchsploit -m unix/remote/49757.py`.
+Una vez con el exploit en nuestra máquina lo ejecutamos `python3 49757.py 172.17.0.2`, y comprobamos, después de un error, que ya tenemos una shell como root, dando por finalizada así la máquina.
+
+[![root_firsthacking](/root_firsthacking.png)](/root_firsthacking.png)
+
