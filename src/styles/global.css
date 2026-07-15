@@ -122,18 +122,10 @@ a:hover {
   align-items: center;
   flex-shrink: 0;
   line-height: 1;
-  color: var(--text);
+  text-decoration: none;
+  color: var(--accent);
   font-weight: 700;
   letter-spacing: 0.02em;
-  text-decoration: none;
-}
-
-.logo img {
-  display: block;
-  height: 46px;
-  width: auto;
-  border-radius: 8px;
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
 }
 
 .links {
@@ -146,7 +138,7 @@ a:hover {
 
 .links a {
   margin-left: 1rem;
-  color: var(--text);
+  color: var(--accent);
   font-size: 0.9rem;
 }
 
@@ -165,11 +157,6 @@ a:hover {
   .logo {
     min-width: max-content;
     font-size: 0.95rem;
-  }
-
-  .logo img {
-    height: 38px;
-    width: auto;
   }
 
   .links {
@@ -202,7 +189,7 @@ section {
 }
 .links a {
   margin-left: 1rem;
-  color: var(--text);
+  color: var(--accent);
   font-size: 0.9rem;
   transition: color 0.2s ease;
 }
@@ -876,11 +863,7 @@ body.lightbox-open {
 }
 
 .logo {
-  padding: 0.25rem 0.6rem;
-}
-
-.logo img {
-  height: 58px;
+  padding: 0;
 }
 
 body {
@@ -899,10 +882,6 @@ section {
   .navbar {
     min-height: var(--nav-height-mobile);
     padding: 0.7rem 1rem;
-  }
-
-  .logo img {
-    height: 46px;
   }
 
   body {
