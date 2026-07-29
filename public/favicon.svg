@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="favicon circular">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="256" cy="256" r="240" />
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="256" ry="256" fill="transparent" />
+  <image href="apple-touch-icon.png" x="16" y="16" width="480" height="480" clip-path="url(#circleClip)" />
+</svg>
