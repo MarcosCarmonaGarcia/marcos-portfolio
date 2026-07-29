@@ -1,9 +1,13 @@
 ---
 const base = import.meta.env.BASE_URL;
+const logoSrc = `${base}apple-touch-icon.png`;
 ---
 
 <nav class="navbar">
-  <a class="logo" href={`${base}#inicio`} aria-label="Ir al inicio">Marcos Carmona</a>
+  <a class="logo" href={`${base}#inicio`} aria-label="Ir al inicio">
+    <img src={logoSrc} alt="Marcos Carmona" />
+    <span class="site-name">marcoscarmona.dev</span>
+  </a>
 
   <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav-links" aria-label="Abrir menú">
     <span></span>

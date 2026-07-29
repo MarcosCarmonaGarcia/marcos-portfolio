@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 :root {
   --bg: #0b0f17;
   --text: #e6edf3;
@@ -12,7 +14,7 @@
 }
 
 body {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -108,8 +110,9 @@ a:hover {
   justify-content: space-between;
   align-items: center;
 
-  background: rgba(11, 15, 23, 0.6);
-  backdrop-filter: blur(12px);
+  background: rgba(11, 15, 23, 0.72);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 0 0 1px rgba(43, 188, 138, 0.08), 0 8px 24px rgba(0, 0, 0, 0.24);
 
   border-bottom: 1px solid rgba(31, 41, 55, 0.5);
   z-index: 1000;
@@ -120,12 +123,34 @@ a:hover {
 .logo {
   display: inline-flex;
   align-items: center;
+  gap: 0.7rem;
   flex-shrink: 0;
   line-height: 1;
   text-decoration: none;
   color: var(--accent);
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.logo img {
+  display: block;
+  height: 72px;
+  width: 72px;
+  max-width: 260px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(43, 188, 138, 0.65);
+  box-shadow: 0 0 0 2px rgba(11, 15, 23, 0.7), 0 0 14px rgba(43, 188, 138, 0.28);
+  filter: drop-shadow(0 0 10px rgba(43, 188, 138, 0.22));
+}
+
+.site-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--accent);
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 .links {
@@ -140,6 +165,10 @@ a:hover {
   margin-left: 1rem;
   color: var(--accent);
   font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 .links a:hover {
@@ -157,6 +186,17 @@ a:hover {
   .logo {
     min-width: max-content;
     font-size: 0.95rem;
+  }
+
+  .logo img {
+    height: 50px;
+    width: 50px;
+    max-width: 200px;
+    border-width: 1.5px;
+  }
+
+  .site-name {
+    font-size: 0.9rem;
   }
 
   .links {
