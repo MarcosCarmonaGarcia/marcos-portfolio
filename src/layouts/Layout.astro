@@ -12,6 +12,9 @@ const pageUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toSt
 const socialImage = image
   ? new URL(image, Astro.site ?? Astro.url.origin).toString()
   : new URL(`${import.meta.env.BASE_URL}favicon.png`, Astro.site ?? Astro.url.origin).toString();
+const faviconSvg = new URL(`${import.meta.env.BASE_URL}favicon.svg`, Astro.site ?? Astro.url.origin).toString();
+const faviconPng = new URL(`${import.meta.env.BASE_URL}favicon.png`, Astro.site ?? Astro.url.origin).toString();
+const appleTouchIcon = new URL(`${import.meta.env.BASE_URL}apple-touch-icon.png`, Astro.site ?? Astro.url.origin).toString();
 ---
 
 <!doctype html>
@@ -20,9 +23,11 @@ const socialImage = image
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <link rel="shortcut icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
-    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
-    <link rel="apple-touch-icon" sizes="180x180" href={`${import.meta.env.BASE_URL}apple-touch-icon.png`} />
+    <link rel="icon" href={faviconPng} type="image/png" sizes="32x32" />
+    <link rel="icon" href={faviconSvg} type="image/svg+xml" />
+    <link rel="shortcut icon" href={faviconPng} />
+    <link rel="apple-touch-icon" sizes="180x180" href={appleTouchIcon} />
+    <link rel="mask-icon" href={faviconSvg} color="#0b0b0b" />
     <meta name="theme-color" content="#0b0b0b" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
