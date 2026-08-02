@@ -14,6 +14,20 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+
+const extractFirstImage = (content?: string) => {
+  if (!content) return undefined;
+
+  const markdownImageMatch = content.match(/!\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/);
+  if (markdownImageMatch?.[1]) return markdownImageMatch[1].replace(/^<|>$/g, "");
+
+  const htmlImageMatch = content.match(/<img\s+[^>]*src=["']([^"']+)["'][^>]*>/i);
+  if (htmlImageMatch?.[1]) return htmlImageMatch[1].trim();
+
+  return undefined;
+};
+
+const socialImage = extractFirstImage(post.body) ?? post.data.image;
 const postUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
 const shareText = `${post.data.title} — ${post.data.description}`;
 const encodedPostUrl = encodeURIComponent(postUrl);
@@ -26,7 +40,7 @@ const prev = posts[currentIndex - 1];
 const next = posts[currentIndex + 1];
 ---
 
-<Layout title={post.data.title} description={post.data.description} image={post.data.image}>
+<Layout title={post.data.title} description={post.data.description} image={socialImage}>
   <article class="section post-article">
     <h1>{post.data.title}</h1>
     <p class="meta">{post.data.description}</p>
